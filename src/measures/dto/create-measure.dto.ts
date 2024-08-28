@@ -6,9 +6,6 @@ enum MeasureType {
 }
 
 export class CreateMeasureDto {
-  @IsNotEmpty()
-  image: string;
-
   @IsString()
   @IsNotEmpty()
   customer_code: string;

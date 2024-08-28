@@ -2,51 +2,34 @@ import {
   Controller,
   Post,
   UseInterceptors,
-  UploadedFile,
-  BadRequestException,
   HttpCode,
   Body,
   HttpStatus,
   UploadedFiles,
 } from '@nestjs/common';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { MeasuresService } from './measures.service';
-import { PromptBody, PromptBodyWithImages } from './dto/prompt.dto';
+import { CreateMeasureDto } from './dto/create-measure.dto';
 
 @Controller()
 export class MeasuresController {
   constructor(private readonly measuresService: MeasuresService) {}
 
-  @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile() file: Express.Multer.File) {
-    if (!file) {
-      throw new BadRequestException('Nenhum arquivo foi enviado');
-    }
-
-    return {
-      message: 'Arquivo enviado e processado com sucesso',
-      fileName: file.originalname,
-    };
-  }
-
-  @Post('prompt')
-  @HttpCode(HttpStatus.OK)
-  getPromptResponse(@Body() body: PromptBody) {
-    return this.measuresService.getPromptResponse(body.prompt);
-  }
-
   @UseInterceptors(FilesInterceptor('images', 10))
   @HttpCode(HttpStatus.OK)
-  @Post('prompt-with-image')
+  @Post('upload')
   getPromoptResponseWithImages(
     @UploadedFiles() images: Array<Express.Multer.File>,
-    @Body() body: PromptBodyWithImages,
+    @Body() body: CreateMeasureDto,
   ) {
     console.log(images);
+    const prompt = 'The numerical value only';
     return this.measuresService.getPromoptResponseWithImages(
-      body.prompt,
+      prompt,
       images,
+      body.customer_code,
+      body.measure_datetime,
+      body.measure_type,
     );
   }
 }
