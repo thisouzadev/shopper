@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { EnvService } from 'src/env/env.service';
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -114,5 +115,46 @@ export class MeasuresService {
         mimeType,
       },
     };
+  }
+
+  async confirmMeasure(
+    measure_uuid: string,
+    confirmed_value: number,
+  ): Promise<{ success: boolean }> {
+    if (!measure_uuid || typeof confirmed_value !== 'number') {
+      throw new BadRequestException({
+        error_code: 'INVALID_DATA',
+        error_description:
+          'Dados fornecidos no corpo da requisição são inválidos',
+      });
+    }
+
+    const measure = await this.prisma.measure.findUnique({
+      where: { id: measure_uuid },
+    });
+
+    if (!measure) {
+      throw new NotFoundException({
+        error_code: 'MEASURE_NOT_FOUND',
+        error_description: 'Leitura não encontrada',
+      });
+    }
+
+    if (measure.hasConfirmed) {
+      throw new ConflictException({
+        error_code: 'CONFIRMATION_DUPLICATE',
+        error_description: 'Leitura já confirmada',
+      });
+    }
+
+    await this.prisma.measure.update({
+      where: { id: measure_uuid },
+      data: {
+        measureValue: confirmed_value,
+        hasConfirmed: true,
+      },
+    });
+
+    return { success: true };
   }
 }

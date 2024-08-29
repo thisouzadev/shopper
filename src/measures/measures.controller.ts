@@ -6,6 +6,7 @@ import {
   Body,
   HttpStatus,
   UploadedFiles,
+  Patch,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { MeasuresService } from './measures.service';
@@ -31,5 +32,14 @@ export class MeasuresController {
       body.measure_datetime,
       body.measure_type,
     );
+  }
+
+  @Patch('confirm')
+  @HttpCode(HttpStatus.OK)
+  async confirmMeasure(
+    @Body() body: { measure_uuid: string; confirmed_value: number },
+  ): Promise<{ success: boolean }> {
+    const { measure_uuid, confirmed_value } = body;
+    return this.measuresService.confirmMeasure(measure_uuid, confirmed_value);
   }
 }
