@@ -157,4 +157,31 @@ export class MeasuresService {
 
     return { success: true };
   }
+
+  async getMeasuresByCustomer(customerCode: string, measureType?: string) {
+    if (measureType && !['WATER', 'GAS'].includes(measureType.toUpperCase())) {
+      throw new BadRequestException({
+        error_code: 'INVALID_TYPE',
+        error_description: 'Tipo de medição não permitida',
+      });
+    }
+
+    const filter = {
+      customerCode,
+      ...(measureType ? { measureType: measureType.toUpperCase() } : {}),
+    };
+
+    const measures = await this.prisma.measure.findMany({
+      where: filter,
+    });
+
+    if (measures.length === 0) {
+      throw new NotFoundException({
+        error_code: 'MEASURES_NOT_FOUND',
+        error_description: 'Nenhuma leitura encontrada',
+      });
+    }
+
+    return measures;
+  }
 }

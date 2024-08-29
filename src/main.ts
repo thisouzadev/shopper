@@ -22,6 +22,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
   app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
+
   const configService = app.get(EnvService);
   const port = configService.get('PORT');
   await app.listen(port);
